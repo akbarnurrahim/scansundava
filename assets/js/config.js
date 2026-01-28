@@ -4,7 +4,7 @@
 
 const CONFIG = {
     // API Endpoints
-    API_URL: 'http://localhost:8001/api/v1/members/scan',
+    API_URL: 'https://api.sundava.cloud/api/v1/members/scan',
 
     // Storage Keys
     THEME_STORAGE_KEY: 'ssp_theme_preference',
