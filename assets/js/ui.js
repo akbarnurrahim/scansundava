@@ -82,9 +82,9 @@ const UI = {
     // Populate Member Profile UI
     populateMemberData(data) {
         const member = data.member;
-        const orders = data.orders;
-        const products = data.available_products || [];
-        const sources = data.available_sources || [];
+        const orders = data.orders || [];  // Safety: default to empty array
+        const products = member.products || [];  // Get from member object
+        const sources = member.sources || [];    // Get from member object
 
         // Basic Info
         document.getElementById('shop-name').innerText = member.nama_toko;
@@ -92,28 +92,32 @@ const UI = {
         document.getElementById('shop-address').innerText = member.alamat || 'Alamat tidak tersedia';
         document.getElementById('owner-wa').innerText = member.nomor_handphone || '-';
 
-        // Photos
+        // Photos - Use absolute URLs
+        const API_BASE = 'https://api.sundava.cloud/api/v1/';
         const bannerImg = document.getElementById('member-banner-img');
-        if (bannerImg) bannerImg.src = member.foto_toko || CONFIG.ASSETS.DEFAULT_SHOP;
+        if (bannerImg) bannerImg.src = member.foto_toko ? API_BASE + member.foto_toko : CONFIG.ASSETS.DEFAULT_SHOP;
 
         const logoContainer = document.getElementById('member-logo-container');
         const logoImg = document.getElementById('member-logo-img');
         if (member.logo_toko) {
             if (logoContainer) logoContainer.style.display = 'block';
-            if (logoImg) logoImg.src = member.logo_toko;
+            if (logoImg) logoImg.src = API_BASE + member.logo_toko;
         } else {
             if (logoContainer) logoContainer.style.display = 'none';
         }
 
         const profileImg = document.getElementById('member-profile-img');
-        if (profileImg) profileImg.src = member.foto_profil || CONFIG.ASSETS.DEFAULT_AVATAR;
+        if (profileImg) profileImg.src = member.foto_profil ? API_BASE + member.foto_profil : CONFIG.ASSETS.DEFAULT_AVATAR;
 
-        // Render Lists
-        this.renderGenericList('product-list-container', products, 'Belum ada produk yang ditugaskan.');
-        this.renderGenericList('source-list-container', sources, 'Belum ada sumber barang yang ditugaskan.');
+        // Render Lists - Extract names from objects
+        const productNames = products.map(p => p.nama_produk || p);
+        const sourceNames = sources.map(s => s.nama_sumber || s);
+        this.renderGenericList('product-list-container', productNames, 'Belum ada produk yang ditugaskan.');
+        this.renderGenericList('source-list-container', sourceNames, 'Belum ada sumber barang yang ditugaskan.');
 
         // Render Pendamping
-        const pendamping = member.pendamping_nama ? [member.pendamping_nama] : [];
+        const pendampingName = member.pendamping ? member.pendamping.nama_pendamping : null;
+        const pendamping = pendampingName ? [pendampingName] : [];
         this.renderGenericList('officer-list-container', pendamping, 'Petugas belum ditugaskan.');
 
         // Render Orders in two places
@@ -125,7 +129,7 @@ const UI = {
         const container = document.getElementById('profile-history-container');
         if (!container) return;
 
-        if (orders.length > 0) {
+        if (orders && orders.length > 0) {
             // Only show latest 3 on profile
             const latest = orders.slice(0, 3);
             let html = '';
@@ -174,7 +178,7 @@ const UI = {
         if (!container) return;
 
         let html = '<div class="m3-card"><span class="card-label">Total PO Diterima</span>';
-        if (orders.length > 0) {
+        if (orders && orders.length > 0) {
             html += orders.map(o => `
                 <div class="order-item-android">
                     <div style="flex: 1;">
